@@ -1,0 +1,4 @@
+Main-Class: nivellement.Main
+Implementation-Title: Nivellement
+Implementation-Version: 1.00
+Implementation-Vendor: Dipl.-Ing. (FH) Stefan Klein

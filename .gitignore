@@ -1,0 +1,12 @@
+*.class
+*_Hoehen.csv
+*_Protokoll.txt
+beispiele/*_Hoehen.csv
+beispiele/Hoehendatei.csv
+bin/
+build/
+dist/
+
+# Windows-Starter
+windows/starter/*.syso
+*_Einstellungen.properties

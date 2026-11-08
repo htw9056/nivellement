@@ -1,0 +1,50 @@
+Nivellement @VERSION@
+(c) Dipl.-Ing. (FH) Stefan Klein - MIT-Lizenz (siehe LIZENZ.txt)
+
+Klassische Nivellementauswertung mit Verteilung des Abschlussfehlers.
+
+
+INSTALLATION
+------------
+Keine Installation noetig. Den Ordner an eine beliebige Stelle kopieren
+(z. B. C:\Programme\Nivellement oder auf einen USB-Stick) und
+
+    Nivellement.exe
+
+starten. Eine Java-Installation ist NICHT erforderlich, die Java-Laufzeit
+liegt im Unterordner "runtime".
+
+Tipp: Rechtsklick auf Nivellement.exe -> "Senden an" -> "Desktop
+(Verknuepfung erstellen)".
+
+Beim ersten Start kann Windows SmartScreen warnen ("Der Computer wurde durch
+Windows geschuetzt"), weil das Programm nicht digital signiert ist.
+Dann auf "Weitere Informationen" -> "Trotzdem ausfuehren" klicken.
+
+
+INHALT
+------
+Nivellement.exe           Programm mit Oberflaeche
+NivellementKonsole.exe    Aufruf in der Eingabeaufforderung, z. B.
+                              NivellementKonsole.exe Projekt.NIG -f Festpunkte.txt
+                              NivellementKonsole.exe -h      (alle Optionen)
+app\Nivellement.jar       Programm (laeuft auch mit installiertem Java 17+)
+runtime\                  Java-Laufzeit (Eclipse Temurin, GPLv2 mit Classpath
+                          Exception, Lizenzen in runtime\legal)
+beispiele\                Beispieldaten (GSI, DAT, Festpunkte)
+Handbuch.html             ausfuehrliche Anleitung (auch im Programm: F1)
+DRITTANBIETER.txt         Lizenzen der mitgelieferten Java- und Go-Laufzeit
+
+
+ERSTE SCHRITTE
+--------------
+1. Datei -> Neues Projekt  (oder vorhandene NIGRA-Stapeldatei .NIG oeffnen;
+   eine gleichnamige NIGRA-Hoehendatei .MDB wird zur Uebernahme angeboten)
+2. Digital-Niv -> Rohdaten (GSI / DAT) -> Stapeldatei
+3. Register "Hoehenverzeichnis": Festpunkte eingeben oder importieren
+4. Berechnen -> Stapelberechnung
+
+Das Programm speichert neben der Stapeldatei:
+    <Projekt>_Hoehen.csv       Hoehendatei
+    <Projekt>_Protokoll.txt    Berechnungsprotokoll
+Einstellungen: %USERPROFILE%\.nivellement.properties

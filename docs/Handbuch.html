@@ -1,0 +1,609 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Nivellement - Handbuch</title>
+<style>
+body { font-family: SansSerif; font-size: 12pt; margin-left: 12px; margin-right: 12px; }
+h1 { font-size: 20pt; color: #16487f; }
+h2 { font-size: 16pt; color: #16487f; margin-top: 18px; }
+h3 { font-size: 13pt; color: #16487f; margin-top: 12px; }
+pre { font-family: Monospaced; font-size: 11pt; background-color: #f2f2f2; }
+code { font-family: Monospaced; font-size: 11pt; }
+td { font-size: 11pt; vertical-align: top; }
+th { font-size: 11pt; text-align: left; background-color: #dde6f0; }
+.hinweis { background-color: #fff6d6; }
+.formel { font-family: Monospaced; font-size: 12pt; background-color: #eef3f8; }
+</style>
+</head>
+<body>
+
+<h1><a name="start"></a>Nivellement &ndash; Handbuch</h1>
+<p><b>Nivellement V1.00</b> &nbsp; &copy; Dipl.-Ing. (FH) Stefan Klein &nbsp;&middot;&nbsp; MIT-Lizenz</p>
+
+<p>Nivellement wertet geometrische Nivellements <b>klassisch</b> aus, also ohne Ausgleichung.
+Für jede Nivellementlinie wird der Abschlussfehler ermittelt, gegen eine Fehlergrenze
+geprüft und auf die Aufstellungen verteilt. Die berechneten Höhen werden in einer Höhendatei
+des Projekts gespeichert und bei Mehrfachbestimmungen gemittelt oder verglichen.</p>
+
+<p>Arbeitsweise und Dateiformate orientieren sich an dem früheren Programm NIGRA. Nivellement ist jedoch
+ein eigenständiges, unabhängig entwickeltes Programm ohne Programmcode oder Texte von NIGRA; NIGRA ist ein
+Produkt von Kurt Andrä, eine Verbindung besteht nicht.
+Vorhandene NIGRA-Projekte (Stapeldatei <code>.NIG</code>, Höhendatei <code>.MDB</code>,
+<code>Projekt.xml</code>) können direkt weiterverwendet werden.</p>
+
+<h3>Inhalt</h3>
+<ol>
+<li><a href="#schnellstart">Schnellstart</a></li>
+<li><a href="#oberflaeche">Die Oberfläche</a></li>
+<li><a href="#projekt">Projekte und Dateien</a></li>
+<li><a href="#rohdaten">Rohdaten übernehmen (Leica GSI, Trimble DAT)</a></li>
+<li><a href="#stapeldatei">Die Stapeldatei</a></li>
+<li><a href="#berechnung">Berechnung</a></li>
+<li><a href="#rechenweg">Rechenweg und Formeln</a></li>
+<li><a href="#fehlergrenzen">Fehlerklassen und Fehlergrenzen</a></li>
+<li><a href="#hoehendatei">Höhendatei und Mittelbildung</a></li>
+<li><a href="#hoehenverzeichnis">Höhenverzeichnis</a></li>
+<li><a href="#protokoll">Das Protokoll</a></li>
+<li><a href="#drucken">Drucken</a></li>
+<li><a href="#kopfdaten">Kopfdaten</a></li>
+<li><a href="#konfiguration">Programmkonfiguration</a></li>
+<li><a href="#einstellungen">Speichern der Einstellungen</a></li>
+<li><a href="#nigra">Übernahme aus NIGRA</a></li>
+<li><a href="#konsole">Aufruf in der Konsole</a></li>
+<li><a href="#meldungen">Meldungen und ihre Bedeutung</a></li>
+<li><a href="#fragen">Häufige Fragen</a></li>
+<li><a href="#grenzen">Was noch nicht enthalten ist</a></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2><a name="schnellstart"></a>1. Schnellstart</h2>
+<ol>
+<li><b>Datei &rarr; Neues Projekt</b>: Ordner und Namen der Stapeldatei wählen, z.&nbsp;B.
+<code>Baustelle.NIG</code>. Ein vorhandenes Projekt öffnen Sie mit <b>Datei &rarr; Projekt öffnen</b>.</li>
+<li>Im Register <b>Kopfdaten</b> Ort, Auftrag, Beobachter, Nivellier usw. eintragen. Sie erscheinen
+später im Protokollkopf.</li>
+<li>Im Register <b>Berechnung</b> Fehlerklasse, Mittelbildung, Verteilung und Dezimalstellen einstellen.</li>
+<li><b>Digital-Niv &rarr; Rohdaten (GSI / DAT) &rarr; Stapeldatei</b>: die Messdateien des
+Digitalnivelliers wählen. Jede Linie wird als eigenes Nivellement mit fortlaufender
+Berechnungsnummer an die Stapeldatei angehängt.</li>
+<li>Im Register <b>Stapeldatei</b> die Messdaten kontrollieren und bei Bedarf korrigieren
+(Punktnummern, Kopfdaten).</li>
+<li>Im Register <b>Höhenverzeichnis</b> die Festpunkte eingeben oder mit <b>Import ASCII</b> einlesen.
+Festpunkte erhalten die Berechnungsnummer <b>999999</b>.</li>
+<li><b>Messdaten prüfen</b> und anschließend <b>Stapelberechnung</b> starten.</li>
+<li>Das Ergebnis erscheint im Register <b>Protokoll</b> und wird als <code>&lt;Projekt&gt;_Protokoll.txt</code>
+gespeichert. Die neuen Höhen stehen im Höhenverzeichnis.</li>
+</ol>
+<p class="hinweis">Alle Einstellungen werden automatisch gespeichert. Ein neues Projekt übernimmt die
+Einstellungen und Kopfdaten des zuletzt bearbeiteten Projekts.</p>
+
+<!-- ============================================================ -->
+<h2><a name="oberflaeche"></a>2. Die Oberfläche</h2>
+<h3>Menüs</h3>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Menü</th><th>Inhalt</th></tr>
+<tr><td>Datei</td><td>Projekt öffnen, Neues Projekt, Stapeldatei bearbeiten, Drucken (Strg+P), Druckvorschau, Beenden</td></tr>
+<tr><td>Digital-Niv</td><td>Rohdaten (Leica GSI, Trimble DAT) in die Stapeldatei übernehmen</td></tr>
+<tr><td>Berechnen</td><td>Messdaten prüfen, Stapelberechnung, Berechnung zeigen</td></tr>
+<tr><td>Höhen</td><td>Höhenverzeichnis</td></tr>
+<tr><td>?</td><td>Handbuch (F1), Über</td></tr>
+</table>
+<h3>Register</h3>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Register</th><th>Zweck</th></tr>
+<tr><td><a href="#berechnung">Berechnung</a></td><td>Projekt, Rohdaten-Übernahme, Parameter, Start der Stapelberechnung</td></tr>
+<tr><td><a href="#stapeldatei">Stapeldatei</a></td><td>Editor für die Messdaten mit Spaltenlineal</td></tr>
+<tr><td><a href="#protokoll">Protokoll</a></td><td>Ergebnis der letzten Berechnung</td></tr>
+<tr><td><a href="#hoehenverzeichnis">Höhenverzeichnis</a></td><td>Höhendatei anzeigen und bearbeiten, Import und Export</td></tr>
+<tr><td><a href="#kopfdaten">Kopfdaten</a></td><td>Angaben für den Protokollkopf</td></tr>
+<tr><td><a href="#konfiguration">Programmkonfiguration</a></td><td>Firma, Fehlerformeln, Schwellfaktor, Logo für den Druck</td></tr>
+</table>
+<p>Die <b>Statuszeile</b> am unteren Fensterrand zeigt das aktuelle Projekt und woher seine
+Einstellungen stammen. <b>F1</b> öffnet in jedem Register den passenden Abschnitt dieses Handbuchs.
+Wenn Sie mit der Maus kurz auf einem Eingabefeld verweilen, erscheint ein Hinweis.</p>
+<h3>Dateien auswählen</h3>
+<p>Die Knöpfe <b>...</b> öffnen unter Windows den gewohnten Windows-Dateidialog. Dort kann ein kopierter Ordner-
+oder Dateipfad in die Adressleiste oder in das Feld <b>Dateiname</b> eingefügt werden (Strg+V).</p>
+<p>Alternativ fügen Sie einen Pfad direkt in das Feld im Programm ein, z.&nbsp;B. mit <b>Als Pfad kopieren</b>
+aus dem Windows-Explorer. Anführungszeichen werden dabei automatisch entfernt. Im Feld <b>Projekt / Messdatei</b>
+wird das Projekt mit <b>Enter</b> oder beim Verlassen des Feldes geöffnet.</p>
+
+<!-- ============================================================ -->
+<h2><a name="projekt"></a>3. Projekte und Dateien</h2>
+<p>Ein Projekt ist ein Ordner mit einer Stapeldatei. Das Programm legt daneben weitere Dateien an,
+die alle mit dem Projektnamen beginnen:</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Datei</th><th>Inhalt</th></tr>
+<tr><td><code>&lt;Projekt&gt;.NIG</code></td><td>Stapeldatei mit allen Messdaten (Textdatei, Zeichensatz ANSI wie bei NIGRA)</td></tr>
+<tr><td><code>&lt;Projekt&gt;_Hoehen.csv</code></td><td>Höhendatei (Semikolon-getrennt, in Excel lesbar)</td></tr>
+<tr><td><code>&lt;Projekt&gt;_Protokoll.txt</code></td><td>Berechnungsprotokoll</td></tr>
+<tr><td><code>&lt;Projekt&gt;_Einstellungen.properties</code></td><td>Einstellungen des Projekts</td></tr>
+</table>
+<p>Statt einer Stapeldatei kann auch eine GSI- oder DAT-Datei direkt als Messdatei gewählt und
+berechnet werden. Die Höhendatei heißt dann ebenfalls <code>&lt;Messdatei&gt;_Hoehen.csv</code>.
+Für eine dauerhafte Bearbeitung ist die Stapeldatei aber besser geeignet, weil sich die Messdaten
+dort korrigieren lassen.</p>
+<p>Im Feld <b>Höhendatei</b> kann eine andere Höhendatei angegeben werden, z.&nbsp;B. eine gemeinsame
+Datei für mehrere Projekte. Bleibt es leer, wird <code>&lt;Projekt&gt;_Hoehen.csv</code> verwendet.</p>
+
+<!-- ============================================================ -->
+<h2><a name="rohdaten"></a>4. Rohdaten übernehmen</h2>
+<p>Mit <b>Digital-Niv &rarr; Rohdaten (GSI / DAT) &rarr; Stapeldatei</b> werden eine oder mehrere
+Messdateien umformatiert und an die Stapeldatei angehängt. Das Format wird automatisch erkannt.
+Jede Linie erhält</p>
+<ul>
+<li>die nächste freie Berechnungsnummer,</li>
+<li>die Kopfdaten aus dem Register <b>Kopfdaten</b>,</li>
+<li>Mittelbildung, Fehlerklasse, erlaubte Differenz und Dezimalstellen aus dem Register <b>Berechnung</b>.</li>
+</ul>
+<p>Eine im Gerät gespeicherte Anfangshöhe wird als Kommentarzeile <code>xH &lt;Punkt&gt; &lt;Höhe&gt;</code>
+mitgeführt. Sie wird nur verwendet, wenn der Anfangspunkt weder in der Festpunkt- noch in der
+Höhendatei steht.</p>
+
+<h3>Leica GSI (GSI-8 und GSI-16)</h3>
+<p>Für DNA03, DNA10, LS10, LS15, Sprinter und andere Leica-Digitalnivelliere.</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Wortindex</th><th>Bedeutung</th></tr>
+<tr><td>11</td><td>Punktnummer</td></tr>
+<tr><td>32</td><td>Zielweite</td></tr>
+<tr><td>331 / 335</td><td>Rückblick, 1. / 2. Ablesung</td></tr>
+<tr><td>332 / 336</td><td>Vorblick, 1. / 2. Ablesung</td></tr>
+<tr><td>333</td><td>Zwischenblick</td></tr>
+<tr><td>83</td><td>Höhe (Anfangshöhe)</td></tr>
+<tr><td>41 / 42</td><td>Beginn einer neuen Linie / Linienname</td></tr>
+</table>
+<p>Einheiten: 0 = mm, 6 = 1/10&nbsp;mm, 8 = 1/100&nbsp;mm.</p>
+
+<h3>Trimble DAT (Format M5, DiNi)</h3>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Kennung</th><th>Bedeutung</th></tr>
+<tr><td><code>Rb</code> / <code>Lr</code></td><td>Rückblick</td></tr>
+<tr><td><code>Rf</code> / <code>Lv</code></td><td>Vorblick</td></tr>
+<tr><td><code>Rz</code> / <code>Lz</code></td><td>Zwischenblick</td></tr>
+<tr><td><code>HD</code> / <code>E</code></td><td>Zielweite</td></tr>
+<tr><td><code>Z</code></td><td>Höhe (Anfangshöhe)</td></tr>
+<tr><td><code>Start-Line</code> / <code>Zugbeginn</code>, <code>End-Line</code> / <code>Zugende</code></td><td>Linientrennung</td></tr>
+</table>
+<p>Englische und deutsche Kennungen werden gleichermaßen erkannt. Negative Ablesungen
+(z.&nbsp;B. bei Firstmessungen mit umgekehrter Latte) werden mit Vorzeichen übernommen.</p>
+
+<!-- ============================================================ -->
+<h2><a name="stapeldatei"></a>5. Die Stapeldatei</h2>
+<p>Die Stapeldatei (<code>.NIG</code>) ist eine Textdatei mit festem Spaltenaufbau. Sie enthält beliebig
+viele Nivellements hintereinander. Jedes Nivellement besteht aus einem <b>Steuerdatenblock</b> und einem
+<b>Messdatenblock</b>; beide enden mit einer Zeile, die mit <code>E</code> beginnt. Maßgebend ist das
+Zeichen in <b>Spalte 1</b>:</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Spalte 1</th><th>Bedeutung</th></tr>
+<tr><td><code>C</code></td><td>Titel (erscheint im Protokollkopf)</td></tr>
+<tr><td><code>B</code></td><td>Berechnungsnummer</td></tr>
+<tr><td><code>K</code></td><td>Kopf- und Parameterzeilen (genau 20 Stück, Reihenfolge siehe unten)</td></tr>
+<tr><td><code>E</code></td><td>Ende des Steuerdatenblocks bzw. des Messdatenblocks</td></tr>
+<tr><td><code>D</code></td><td>Messdatensatz, Mittelbildung wie im Steuerdatenblock</td></tr>
+<tr><td><code>0</code> <code>1</code> <code>2</code> <code>3</code></td><td>Messdatensatz mit eigener Mittelbildung für diesen Punkt</td></tr>
+<tr><td>jedes andere Zeichen (z.&nbsp;B. <code>x</code>, <code>*</code>)</td><td>Kommentar &ndash; die Zeile wird ignoriert</td></tr>
+</table>
+<p class="hinweis">Eine Messzeile lässt sich vorübergehend ausblenden, indem man das <code>D</code> in
+Spalte 1 durch ein <code>x</code> ersetzt.</p>
+
+<h3>Kopf- und Parameterzeilen (K)</h3>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Nr.</th><th>Inhalt</th><th>Nr.</th><th>Inhalt</th></tr>
+<tr><td>1, 2</td><td>Ort (2 Zeilen)</td><td>13</td><td>Nivellementart und Beobachtungsfolge, z.&nbsp;B. <code>00</code></td></tr>
+<tr><td>3, 4</td><td>Auftrag (2 Zeilen)</td><td>14</td><td>Anzahl Lattenteilungen bzw. Ablesungen (1 oder 2)</td></tr>
+<tr><td>5</td><td>Linie/Zug</td><td>15</td><td>Lattenkonstante (bei 2 Teilungen)</td></tr>
+<tr><td>6</td><td>Datum</td><td>16</td><td>Erlaubte Differenz bei 2 Ablesungen [0,1&nbsp;mm]</td></tr>
+<tr><td>7</td><td>Wetter</td><td>17</td><td>Lattenteilung: 1 = cm, 0.5 = ½&nbsp;cm</td></tr>
+<tr><td>8</td><td>Beobachter</td><td>18</td><td>Berechnung mit Strecken: 1 = ja, 0 = nein</td></tr>
+<tr><td>9</td><td>Nivellier</td><td>19</td><td>Dezimalstellen der Höhen (2&ndash;5)</td></tr>
+<tr><td>10</td><td>Latte</td><td>20</td><td>Dezimalstellen der Lattenablesungen (2&ndash;5)</td></tr>
+<tr><td>11, 12</td><td>Bemerkung (2 Zeilen)</td><td></td><td></td></tr>
+</table>
+<p>Der Wert steht in den Spalten 2&ndash;20, ab Spalte 22 folgt ein erläuternder Text, der nicht ausgewertet wird.</p>
+<p>Die <b>E-Zeile des Steuerdatenblocks</b> enthält: Spalte 2 = Mittelbildung (0&ndash;3),
+Spalte 3 = Fehlerklasse (1&ndash;4), Spalte 4 = Maßeinheit (<code>m</code>). Beispiel: <code>E13m</code>
+bedeutet Mittelbildung &bdquo;neu&ldquo;, Fehlerklasse 3, Meter.</p>
+<p>Nivellementart (1. Stelle von Zeile 13): 0 = Nivellement mit Zwischenblicken, 1 = Streckennivellement,
+4 = Linienausgleichung, 5 = Instrumentenprüfung. Die 2. Stelle gibt die Beobachtungsfolge an
+(0 = RV bzw. RRVV, 2 = RVVR, 4 = RVRV, 5 = VRRV), ein angehängtes <code>a</code> steht für alternierend.</p>
+
+<h3>Messdatensätze</h3>
+<pre>
+Spalte  1      Kennung (D, 0, 1, 2, 3)
+Spalte  2-9    Strecke (Zielweite) in m
+Spalte 10-39   Ablesung mit Kennbuchstaben: r = Rückblick, z = Zwischenblick, v = Vorblick
+Spalte 40-60   Punktnummer (max. 14 Zeichen)
+ab Spalte 61   beliebig (z. B. Uhrzeit, Code) - wird nicht ausgewertet
+</pre>
+<p>Beispiel:</p>
+<pre>
+D   25.26 r1.4235                            1503
+D   15.47           z2.9007                  1503.5
+D   26.15                     v0.0279        1504
+</pre>
+<p>Innerhalb ihres Spaltenbereichs dürfen die Werte frei stehen. Das Spaltenlineal über dem Editor
+und die Anzeige &bdquo;Zeile, Spalte&ldquo; unten helfen beim Ausrichten.</p>
+<p>Bei <b>zwei Ablesungen je Ziel</b> (2 Lattenteilungen, RRVV, RVVR) folgen die beiden Ablesungen
+eines Ziels unmittelbar aufeinander. Sie werden gemittelt und verglichen.</p>
+
+<h3>Messdaten prüfen</h3>
+<p>Die Prüfung (Register Stapeldatei oder Berechnung) meldet ohne zu rechnen:
+fehlende oder unvollständige Steuerblöcke, ungültige Zahlen, Vorblicke ohne Rückblick, Aufstellungen ohne
+Vorblick, unterbrochene Linien (Rückblickpunkt ungleich vorherigem Vorblickpunkt) und fehlende Strecken.</p>
+
+<!-- ============================================================ -->
+<h2><a name="berechnung"></a>6. Berechnung</h2>
+<p>Die <b>Stapelberechnung</b> rechnet alle Nivellements der Stapeldatei nacheinander. Höhen, die in einer
+Berechnung neu bestimmt werden, stehen den folgenden Berechnungen sofort als Anschlusshöhen zur Verfügung.</p>
+
+<h3>Felder im Register Berechnung</h3>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Feld</th><th>Bedeutung</th></tr>
+<tr><td>Projekt / Messdatei</td><td>Stapeldatei (.NIG) oder direkt eine GSI- bzw. DAT-Datei</td></tr>
+<tr><td>Festpunktdatei</td><td>optional: Textdatei mit Punkt und Höhe je Zeile. Diese Punkte gelten als Festpunkte
+und haben Vorrang vor der Höhendatei. Auch ein NIGRA-Höhenverzeichnis (.ASC) ist möglich.</td></tr>
+<tr><td>Höhendatei</td><td>leer = <code>&lt;Projekt&gt;_Hoehen.csv</code></td></tr>
+<tr><td>Fehlerverteilung</td><td>streckenproportional oder nach Anzahl der Rück- und Vorblicke (siehe <a href="#rechenweg">Rechenweg</a>)</td></tr>
+<tr><td>Fehlerklasse</td><td>1&ndash;4, Formeln in der <a href="#konfiguration">Programmkonfiguration</a></td></tr>
+<tr><td>Mittelbildung</td><td>siehe <a href="#hoehendatei">Höhendatei und Mittelbildung</a></td></tr>
+<tr><td>Erlaubte Diff. 2 Ablesungen</td><td>Grenzwert in 0,1&nbsp;mm für die Differenz zweier Ablesungen und die Standpunktdifferenz</td></tr>
+<tr><td>Dezimalstellen</td><td>für Höhen und Lattenablesungen im Protokoll. Intern wird stets mit voller Genauigkeit gerechnet.</td></tr>
+<tr><td>Berechnungs-Nr. ab</td><td>nur für die direkte Berechnung von GSI/DAT-Dateien</td></tr>
+<tr><td>Höhen manuell</td><td>Anfangs- und Endhöhe von Hand, gilt nur für die erste Linie und hat Vorrang</td></tr>
+<tr><td>Berechnungs-Nr. von &ndash; bis</td><td>nur einen Teil der Stapeldatei berechnen (leer = alle). Der Bereich bleibt
+gespeichert &ndash; für eine vollständige Berechnung die Felder leeren.</td></tr>
+<tr><td>Alte Berechnung löschen</td><td>aus: das neue Protokoll wird an das vorhandene angehängt</td></tr>
+<tr><td>Neupunkte vorher löschen</td><td>löscht vor der Berechnung alle Punkte der Höhendatei, die keine Festpunkte sind.
+Notwendig, wenn ein Projekt mit Mittelbildung &bdquo;mitteln&ldquo; vollständig neu berechnet werden soll
+(entspricht der Arbeitsweise von NIGRA). Die Einstellung bleibt gespeichert.</td></tr>
+<tr><td>Höhen nicht speichern, wenn ...</td><td>eine Linie mit überschrittener Fehlergrenze oder ohne Abschluss
+wird berechnet und protokolliert, ihre Höhen werden aber nicht in die Höhendatei übernommen</td></tr>
+<tr><td>Erweitertes Protokoll</td><td>zusätzlich Höhenunterschied dh und Verbesserung v je Punkt sowie eine Rechenprobe</td></tr>
+</table>
+<p class="hinweis">Bei Stapeldateien gelten Fehlerklasse, Mittelbildung, Dezimalstellen und die Lattenparameter
+aus dem Steuerdatenblock jedes Nivellements. Die Felder im Register Berechnung werden dann nur für die
+Umformatierung neuer Rohdaten verwendet.</p>
+
+<h3>Anschlusshöhen</h3>
+<p>Für Anfangs- und Endpunkt einer Linie wird die Höhe in dieser Reihenfolge gesucht:</p>
+<ol>
+<li>manuelle Eingabe (nur erste Linie)</li>
+<li>Festpunktdatei</li>
+<li>Höhendatei (Festpunkte und bereits berechnete Punkte)</li>
+<li>Anfangshöhe aus der Messdatei (<code>xH</code>-Zeile, GSI WI 83, DAT <code>Z</code>) &ndash; nur Anfangspunkt</li>
+</ol>
+
+<h3>Linienarten</h3>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Fall</th><th>Behandlung</th></tr>
+<tr><td>Anfangs- und Endpunkt bekannt</td><td><b>angehängte Linie</b>: Abschlussfehler wird berechnet, geprüft und verteilt</td></tr>
+<tr><td>Anfangspunkt = Endpunkt</td><td><b>Schleife</b>: Soll-Höhenunterschied = 0</td></tr>
+<tr><td>nur Anfangspunkt bekannt</td><td>Berechnung ohne Fehlerverteilung, Meldung ***</td></tr>
+<tr><td>nur Endpunkt bekannt</td><td>Rückwärtsberechnung ohne Fehlerverteilung, Meldung ***</td></tr>
+<tr><td>kein Punkt bekannt</td><td>Berechnung mit Anfangshöhe 0, Meldung ***</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2><a name="rechenweg"></a>7. Rechenweg und Formeln</h2>
+<p>Bezeichnungen: R = Rückblick, V = Vorblick, Z = Zwischenblick (bei zwei Ablesungen jeweils das Mittel),
+s<sub>R</sub>, s<sub>V</sub> = Zielweiten, t = Lattenteilung (1 bzw. 0,5), n = Anzahl der Aufstellungen,
+i = Nummer der Aufstellung.</p>
+
+<h3>Höhenunterschied je Aufstellung</h3>
+<p class="formel">dh<sub>i</sub> = (R<sub>i</sub> &minus; V<sub>i</sub>) &middot; t</p>
+
+<h3>Abschlussfehler</h3>
+<p class="formel">w = (H<sub>E</sub> &minus; H<sub>A</sub>) &minus; &Sigma; dh<sub>i</sub> &nbsp;&nbsp;&nbsp;(Soll &minus; Ist)</p>
+<p>Bei einer Schleife ist H<sub>E</sub> = H<sub>A</sub>. Ein positiver Abschlussfehler bedeutet, dass die
+gemessenen Höhenunterschiede zu klein sind; die Verbesserungen sind dann positiv.</p>
+
+<h3>Verteilung</h3>
+<p><b>Streckenproportional</b> (Standard, wenn alle Zielweiten vorhanden sind):</p>
+<p class="formel">v<sub>i</sub> = w &middot; (s<sub>R,i</sub> + s<sub>V,i</sub>) / &Sigma;(s<sub>R</sub> + s<sub>V</sub>)</p>
+<p><b>Nach Anzahl der Rück- und Vorblicke</b> (oder wenn Zielweiten fehlen):</p>
+<p class="formel">v<sub>i</sub> = w / n</p>
+<p>Strecken zu Zwischenblicken gehen nicht in die Verteilung ein.</p>
+
+<h3>Höhen der Wechselpunkte</h3>
+<p class="formel">H<sub>V,i</sub> = H<sub>R,i</sub> + dh<sub>i</sub> + v<sub>i</sub></p>
+
+<h3>Höhen der Zwischenpunkte</h3>
+<p>Ein Zwischenpunkt erhält den Anteil der Verbesserung seiner Aufstellung, der auf den Weg vom
+Rückblickpunkt bis zum Instrument entfällt:</p>
+<p class="formel">H<sub>Z</sub> = H<sub>R,i</sub> + (R<sub>i</sub> &minus; Z) &middot; t + v<sub>i</sub> &middot; s<sub>R,i</sub> / (s<sub>R,i</sub> + s<sub>V,i</sub>)</p>
+<p>Bei Verteilung nach Anzahl der Blicke wird statt des Streckenverhältnisses &frac12; verwendet.</p>
+
+<h3>Zwei Ablesungen je Ziel</h3>
+<p>Differenz der beiden Ablesungen eines Ziels (im Protokoll Spalte &bdquo;d&ldquo;, Einheit 0,1&nbsp;mm):</p>
+<p class="formel">d = A<sub>1</sub> &minus; A<sub>2</sub> &minus; Lattenkonstante</p>
+<p>Bei Vor- und Zwischenblicken folgt nach einem Schrägstrich die <b>Standpunktdifferenz</b>
+d<sub>R</sub> &minus; d. Überschreitet ein Wert die erlaubte Differenz, wird er mit *** markiert.</p>
+
+<h3>Kontrolle (erweitertes Protokoll)</h3>
+<p class="formel">(&Sigma;R &minus; &Sigma;V) &middot; t + &Sigma;v &minus; (H<sub>E</sub> &minus; H<sub>A</sub>) = 0</p>
+
+<h3>Rundung</h3>
+<p>Gerundet wird nur bei der Ausgabe, und zwar <b>geodätisch</b>: Liegt ein Wert genau in der Mitte,
+wird zur geraden Ziffer gerundet (109.0625 &rarr; 109.062, 109.0635 &rarr; 109.064). Das entspricht NIGRA.</p>
+
+<!-- ============================================================ -->
+<h2><a name="fehlergrenzen"></a>8. Fehlerklassen und Fehlergrenzen</h2>
+<p>Für jede der vier Fehlerklassen wird in der <a href="#konfiguration">Programmkonfiguration</a> eine Formel
+für den zulässigen Abschlussfehler F in mm hinterlegt. <b>R</b> ist der Messweg in km, also die Summe aller
+Zielweiten von Rück- und Vorblicken.</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Klasse</th><th>Vorgabe</th></tr>
+<tr><td>1</td><td><code>1 + 3*Sqrt(R)</code></td></tr>
+<tr><td>2</td><td><code>2 + 3*Sqrt(R)</code></td></tr>
+<tr><td>3</td><td><code>2 + 5*Sqrt(R)</code></td></tr>
+<tr><td>4</td><td><code>3 + 8*Sqrt(R)</code></td></tr>
+</table>
+<p>Die Vorgaben sind Beispiele. Bitte tragen Sie die für Ihre Arbeiten geltenden Werte ein,
+z.&nbsp;B. nach den Vorschriften Ihres Auftraggebers.</p>
+<p>Erlaubt sind Zahlen, <code>R</code>, <code>+ - * / ^</code>, Klammern sowie <code>Sqrt()</code> (Quadratwurzel) und
+<code>Abs()</code> (Betrag). Beispiele: <code>2 + 3*R</code>, <code>2 + 3*Sqrt(R/2)</code>, <code>1.5 + 2.5*R^0.5</code>.
+Komma und Punkt sind als Dezimalzeichen zulässig.</p>
+<p>Wird die Fehlergrenze überschritten, steht im Protokoll *** hinter dem erlaubten Fehler und die Linie
+wird als Fehler gezählt. Mit dem <b>Schwellfaktor</b> erhalten Sie zusätzlich eine Warnung, wenn ein Teil der
+Fehlergrenze überschritten ist: Bei 0.5 wird gewarnt, sobald |w| größer als die halbe Fehlergrenze ist.
+Der Wert 1 schaltet diese Warnung aus.</p>
+
+<!-- ============================================================ -->
+<h2><a name="hoehendatei"></a>9. Höhendatei und Mittelbildung</h2>
+<p>Die Höhendatei enthält je Punkt:</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Feld</th><th>Bedeutung</th></tr>
+<tr><td>Punkt-Nr.</td><td>Punktnummer</td></tr>
+<tr><td>Höhe</td><td>Höhe in m (intern mit 8 Nachkommastellen gespeichert)</td></tr>
+<tr><td>BerNr.</td><td>Berechnungsnummer der letzten Bestimmung; <b>999999 = Festpunkt</b></td></tr>
+<tr><td>Diff.</td><td>Mittelungsdifferenz in mm: neue minus bisherige Höhe</td></tr>
+<tr><td>AB</td><td>Anzahl der Bestimmungen</td></tr>
+<tr><td>Datum, Bemerkung</td><td>frei</td></tr>
+</table>
+<p><b>Festpunkte</b> (BerNr. 999999 oder aus der Festpunktdatei) werden durch eine Berechnung nie verändert.
+Wird ein Festpunkt erneut bestimmt, erscheint die Differenz im Mittelbildungsprotokoll.</p>
+
+<h3>Mittelbildung</h3>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Wert</th><th>Name</th><th>Wirkung, wenn der Punkt bereits in der Höhendatei steht</th></tr>
+<tr><td>0</td><td>mitteln</td><td>H = (H<sub>alt</sub>&middot;AB + H<sub>neu</sub>) / (AB + 1); AB wird um 1 erhöht</td></tr>
+<tr><td>1</td><td>neu</td><td>die neue Höhe ersetzt die alte, AB = 1</td></tr>
+<tr><td>2</td><td>vergleichen</td><td>die alte Höhe bleibt, die Differenz wird protokolliert</td></tr>
+<tr><td>3</td><td>ohne</td><td>weder speichern noch vergleichen</td></tr>
+</table>
+<p>Neue Punkte werden bei 0, 1 und 2 gespeichert. Die Mittelbildung gilt für die ganze Linie (E-Zeile des
+Steuerdatenblocks) und kann für einzelne Punkte geändert werden, indem in der Stapeldatei das <code>D</code>
+in Spalte 1 durch <code>0</code>, <code>1</code>, <code>2</code> oder <code>3</code> ersetzt wird. Im Protokoll steht dann
+hinter der Punktnummer ein Kennbuchstabe: m = mitteln, n = neu, a = vergleichen (alt), o = ohne.</p>
+<p>Das <b>Mittelbildungsprotokoll</b> am Ende der Berechnung listet alle mehrfach bestimmten Punkte mit ihrer
+Differenz. Differenzen über der Grenze für Mehrfachbestimmungen werden mit *** markiert; bei &bdquo;mitteln&ldquo;
+wird der Punkt trotzdem gemittelt.</p>
+<p class="hinweis">Wenn ein Projekt mit &bdquo;mitteln&ldquo; ein zweites Mal vollständig berechnet wird, würde jeder
+Punkt erneut gemittelt. Kreuzen Sie deshalb vor einer Neuberechnung <b>Neupunkte vorher löschen</b> an.</p>
+
+<!-- ============================================================ -->
+<h2><a name="hoehenverzeichnis"></a>10. Höhenverzeichnis</h2>
+<p>Das Register zeigt die Höhendatei als Tabelle. Ein Klick auf eine Spaltenüberschrift sortiert,
+das Feld <b>Filter</b> sucht in Punktnummer und Bemerkung. Zellen werden per Doppelklick bearbeitet.</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Knopf</th><th>Funktion</th></tr>
+<tr><td>Laden</td><td>Höhendatei neu einlesen (verwirft ungespeicherte Änderungen)</td></tr>
+<tr><td>Speichern</td><td>Änderungen in die Höhendatei schreiben</td></tr>
+<tr><td>Neuer Punkt</td><td>neue Zeile, vorbelegt als Festpunkt</td></tr>
+<tr><td>Löschen</td><td>markierte Punkte löschen (nach Rückfrage)</td></tr>
+<tr><td>Als Festpunkt</td><td>markierte Punkte erhalten BerNr. 999999</td></tr>
+<tr><td>Umnummerieren</td><td>ein Punkt: neue Nummer eingeben. Mehrere Punkte: Regel <code>alt=neu</code> ersetzt den
+Anfang der Punktnummer (z.&nbsp;B. <code>1=2</code> macht aus 1001 die 2001), <code>+1000</code> addiert zu numerischen
+Punktnummern</td></tr>
+<tr><td>Import ASCII</td><td>Punkt Höhe je Zeile oder ein NIGRA-Höhenverzeichnis (.ASC) mit allen Feldern</td></tr>
+<tr><td>Import MDB</td><td>NIGRA-Höhendatei (.MDB) übernehmen</td></tr>
+<tr><td>Export ASCII</td><td>NIGRA-Höhenverzeichnis mit 3 oder 4 Dezimalstellen oder einfache Liste Punkt Höhe;
+es werden die aktuell gefilterten Punkte ausgegeben</td></tr>
+</table>
+<p class="hinweis">Änderungen im Höhenverzeichnis werden erst mit <b>Speichern</b> wirksam. Vor einer Berechnung
+fragt das Programm nach, ob ungespeicherte Änderungen übernommen werden sollen.</p>
+
+<!-- ============================================================ -->
+<h2><a name="protokoll"></a>11. Das Protokoll</h2>
+<p>Für jede Berechnung enthält das Protokoll:</p>
+<ul>
+<li>den Kopf mit Firma, Programmversion, Datum und Projekt,</li>
+<li>Titel, Berechnungsnummer und Kopfdaten,</li>
+<li>Lattenteilung, Beobachtungsfolge, ggf. Lattenkonstante und erlaubte Differenz,</li>
+<li>Mittelbildung, Anschlusspunkte mit Herkunft der Höhen, Linienart,</li>
+<li>Abschlussfehler und erlaubten Fehler F mit Fehlerklasse,</li>
+<li>die Messwerte mit Strecke, Rück, Zwischen, Vor, Differenzen d, Höhe und Punkt-Nr.,</li>
+<li>die Summen der Strecken (gesamt, Rückblicke, Vorblicke),</li>
+<li>Fehler (***) und Hinweise.</li>
+</ul>
+<p>Am Ende folgen die Gesamtsumme aller Strecken (ohne Zwischenblicke), der größte Abschlussfehler mit
+seiner Berechnungsnummer, die Anzahl der Fehler und gegebenenfalls das Mittelbildungsprotokoll.</p>
+<p>Das <b>erweiterte Protokoll</b> zeigt zusätzlich je Punkt den Höhenunterschied dh und die Verbesserung v
+in mm sowie die Rechenprobe.</p>
+<p>Alle Zahlen werden mit Dezimalpunkt ausgegeben. Das Protokoll ist eine UTF-8-Textdatei und kann mit jedem
+Editor geöffnet und gedruckt werden.</p>
+
+<!-- ============================================================ -->
+<h2><a name="drucken"></a>12. Drucken</h2>
+<p>Gedruckt wird der Inhalt des aktuellen Registers:</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Register</th><th>Ausdruck</th></tr>
+<tr><td>Protokoll (und alle übrigen Register)</td><td>Berechnungsprotokoll; jede Berechnung beginnt auf einer neuen Seite</td></tr>
+<tr><td>Stapeldatei</td><td>Messdaten (Inhalt der Stapeldatei)</td></tr>
+<tr><td>Höhenverzeichnis</td><td>alle angezeigten Punkte in der aktuellen Sortierung (ein gesetzter Filter wirkt auch auf den Ausdruck)</td></tr>
+</table>
+<p>Aufruf über <b>Datei &rarr; Drucken</b> (Strg+P), <b>Datei &rarr; Druckvorschau</b> oder die Knöpfe
+<b>Drucken</b> und <b>Druckvorschau</b> in den Registern. In der Vorschau kann geblättert und von dort gedruckt werden.</p>
+<p>Jede Seite (DIN A4 hochkant) erhält</p>
+<ul>
+<li>oben links die Firma aus der Programmkonfiguration, den Titel des Ausdrucks und das Projekt,</li>
+<li>oben rechts das eigene <b>Logo</b>,</li>
+<li>unten Programmversion, Druckdatum und &bdquo;Seite x von y&ldquo;.</li>
+</ul>
+<p>Die Schriftgröße wird so gewählt, dass auch das erweiterte Protokoll in voller Breite auf die Seite passt.
+Ist beim Öffnen eines Projekts schon eine Protokolldatei vorhanden, wird sie angezeigt und kann ohne neue
+Berechnung gedruckt werden.</p>
+<h3>Logo</h3>
+<p>Im Register <b>Programmkonfiguration</b> unter <b>Logo im Druckkopf</b> eine Bilddatei wählen (PNG, JPG, GIF
+oder BMP). Die <b>Höhe</b> legt die Größe im Ausdruck fest (Vorgabe 20&nbsp;mm); mit <b>max. Breite</b> lässt sich ein
+sehr breites Logo zusätzlich begrenzen (0 = keine Begrenzung). Das Seitenverhältnis bleibt immer erhalten.
+Unter den Feldern wird das Logo zur Kontrolle angezeigt. Am besten eignet sich ein PNG mit weißem oder
+transparentem Hintergrund und etwa 600 Pixel Breite.</p>
+<p class="hinweis"><b>PDF erzeugen:</b> Im Druckdialog den Drucker <b>Microsoft Print to PDF</b> wählen
+(in Windows 10 und 11 enthalten).</p>
+
+<!-- ============================================================ -->
+<h2><a name="kopfdaten"></a>13. Kopfdaten</h2>
+<p>Die Kopfdaten werden bei der Übernahme von Rohdaten in die Stapeldatei geschrieben und bei der direkten
+Berechnung von GSI/DAT-Dateien in das Protokoll übernommen. In der Stapeldatei stehen einzeilige Angaben in
+19 Zeichen; Ort, Auftrag und Bemerkung dürfen 38 Zeichen lang sein und werden auf zwei Zeilen verteilt.
+Der <b>Projekttitel</b> wird zur C-Zeile und erscheint über jeder Berechnung.</p>
+<p>Kopfdaten bereits übernommener Nivellements ändern Sie direkt in der Stapeldatei.</p>
+
+<!-- ============================================================ -->
+<h2><a name="konfiguration"></a>14. Programmkonfiguration</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Feld</th><th>Bedeutung</th></tr>
+<tr><td>Firma</td><td>erste Zeile jedes Protokolls (z.&nbsp;B. Name und Anschrift)</td></tr>
+<tr><td>Fehlerklasse 1&ndash;4</td><td>Formeln für den zulässigen Abschlussfehler, siehe <a href="#fehlergrenzen">Fehlergrenzen</a></td></tr>
+<tr><td>Schwellfaktor</td><td>Warnung ab diesem Anteil der Fehlergrenze (1 = aus)</td></tr>
+<tr><td>Mehrfachbestimmungen</td><td>zulässige Differenz in mm für das Mittelbildungsprotokoll</td></tr>
+<tr><td>Logo im Druckkopf</td><td>Bilddatei, Höhe und maximale Breite in mm, siehe <a href="#drucken">Drucken</a></td></tr>
+</table>
+<p>Diese Werte gelten für alle Projekte.</p>
+
+<!-- ============================================================ -->
+<h2><a name="einstellungen"></a>15. Speichern der Einstellungen</h2>
+<p>Alle Einstellungen werden <b>automatisch gespeichert</b>, sobald sie geändert werden.</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Ebene</th><th>Datei</th><th>Inhalt</th></tr>
+<tr><td>Programm</td><td><code>.nivellement.properties</code> im Benutzerordner
+(Windows: <code>C:\Users\&lt;Name&gt;</code>)</td><td>Programmkonfiguration, zuletzt verwendete Einstellungen,
+letztes Projekt, Fenstergröße und -lage, letzter Ordner</td></tr>
+<tr><td>Projekt</td><td><code>&lt;Projekt&gt;_Einstellungen.properties</code></td><td>alle Einstellungen des Projekts
+einschließlich Kopfdaten, Festpunkt- und Höhendatei</td></tr>
+</table>
+<ul>
+<li>Ein <b>neues Projekt</b> übernimmt alle Einstellungen des zuletzt bearbeiteten Projekts &ndash; außer Festpunkt-
+und Höhendatei.</li>
+<li>Beim <b>Öffnen</b> eines Projekts werden seine eigenen Einstellungen wiederhergestellt.</li>
+<li>Hat ein Projekt noch keine eigenen Einstellungen, aber eine NIGRA-<code>Projekt.xml</code> im Ordner,
+werden die NIGRA-Einstellungen übernommen.</li>
+<li>Beim <b>Programmstart</b> wird das zuletzt bearbeitete Projekt geöffnet.</li>
+<li>Gespeichert werden <b>alle</b> Felder, Auswahlen und Haken. Manuelle Anfangs- und Endhöhe sowie Berechnungsnummer
+von&ndash;bis gehören nur zum jeweiligen Projekt und werden nicht in ein neues Projekt übernommen.</li>
+<li>Halb eingegebene oder ungültige Zahlen verhindern das Speichern der übrigen Einstellungen nicht; sie werden
+erst beim Berechnen gemeldet.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2><a name="nigra"></a>16. Übernahme aus NIGRA</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>NIGRA-Datei</th><th>Übernahme</th></tr>
+<tr><td>Stapeldatei <code>.NIG</code></td><td>direkt öffnen und berechnen; Kopfdaten, Parameter und punktspezifische
+Mittelbildung bleiben erhalten</td></tr>
+<tr><td>Höhendatei <code>.MDB</code></td><td>Höhenverzeichnis &rarr; <b>Import MDB</b>. Beim Öffnen eines Projekts ohne
+eigene Höhendatei wird der Import einer gleichnamigen <code>.MDB</code> automatisch angeboten.
+Die MDB-Datei wird nicht verändert; Microsoft Access ist nicht erforderlich.</td></tr>
+<tr><td>Höhenverzeichnis <code>.ASC</code></td><td><b>Import ASCII</b> (alle Felder) oder als Festpunktdatei</td></tr>
+<tr><td><code>Projekt.xml</code></td><td>Fehlerklasse, Mittelbildung, Dezimalstellen, erlaubte Differenz, Verteilung,
+Neupunkte löschen, alte Berechnung löschen, Berechnungsnummer von&ndash;bis, Kopfdaten (automatisch beim Öffnen)</td></tr>
+</table>
+<p>Die Rechenweise wurde mit realen NIGRA-Projekten verglichen; Höhen, Abschlussfehler, Fehlergrenzen,
+Mittelbildung und Höhendatei stimmen überein. Unterschiede gibt es nur in der Darstellung des Protokolls.</p>
+<p class="hinweis">Tipp für die Umstellung: Kopieren Sie ein NIGRA-Projekt in einen Testordner, öffnen Sie dort
+die <code>.NIG</code>, übernehmen Sie die <code>.MDB</code>, kreuzen Sie &bdquo;Neupunkte vorher löschen&ldquo; an und
+vergleichen Sie das neue Protokoll mit der NIGRA-Ausgabe (<code>.BER</code>).</p>
+
+<!-- ============================================================ -->
+<h2><a name="konsole"></a>17. Aufruf in der Konsole</h2>
+<p>Unter Windows mit <code>NivellementKonsole.exe</code>, sonst mit <code>java -jar Nivellement.jar</code>.
+Ohne Argumente startet die Oberfläche. Es gelten die gespeicherten Projekteinstellungen; Optionen auf der
+Kommandozeile haben Vorrang.</p>
+<pre>
+NivellementKonsole.exe &lt;Messdatei .nig|.gsi|.dat&gt; [Optionen]
+
+  -f &lt;Datei&gt;        Festpunktdatei (je Zeile: Punkt Höhe)
+  -hd &lt;Datei&gt;       Höhendatei (Standard: &lt;Projekt&gt;_Hoehen.csv)
+  -v z|a            Verteilung streckenproportional (z) oder nach Anzahl der Blicke (a)
+  -k 1..4           Fehlerklasse
+  -m 0..3           Mittelbildung 0=mitteln 1=neu 2=vergleichen 3=ohne
+  -n 2..5           Dezimalstellen der Höhen
+  -ha &lt;m&gt; -he &lt;m&gt;   Anfangs-/Endhöhe manuell (erste Linie)
+  -neu              Neupunkte vorher aus der Höhendatei löschen
+  -x                erweitertes Protokoll
+  -von &lt;n&gt; -bis &lt;m&gt; nur Berechnungsnummern n bis m
+  -a                Protokoll anhängen statt alte Berechnung löschen
+  -p                Messdaten nur prüfen
+  -u &lt;Datei&gt;        GSI/DAT umformatieren und an die Stapeldatei anhängen
+  -mdb &lt;Datei&gt;      NIGRA-Höhendatei (.MDB) übernehmen
+  -asc &lt;Datei&gt;      Höhenverzeichnis (ASCII) übernehmen
+  -export &lt;Datei&gt;   Höhenverzeichnis als ASCII ausgeben
+  -h                Hilfe
+</pre>
+<p>Beispiele:</p>
+<pre>
+NivellementKonsole.exe Baustelle.NIG -u Linie1.gsi -u Linie2.dat
+NivellementKonsole.exe Baustelle.NIG -neu
+NivellementKonsole.exe Baustelle.NIG -von 5 -bis 8 -a
+NivellementKonsole.exe Baustelle.NIG -export Hoehen.ASC -n 3
+</pre>
+
+<!-- ============================================================ -->
+<h2><a name="meldungen"></a>18. Meldungen und ihre Bedeutung</h2>
+<p>Fehler werden im Protokoll mit <b>***</b> gekennzeichnet und am Ende gezählt. Hinweise stehen unter der
+jeweiligen Berechnung.</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Meldung</th><th>Ursache und Abhilfe</th></tr>
+<tr><td>Fehlergrenze überschritten</td><td>|w| ist größer als F der gewählten Fehlerklasse. Messdaten, Punktnummern
+und Anschlusshöhen prüfen; ggf. nachmessen.</td></tr>
+<tr><td>Warnung: |w| überschreitet ...-fache Fehlergrenze</td><td>Schwellfaktor-Warnung, kein Fehler im eigentlichen Sinn.</td></tr>
+<tr><td>Anschlusspunkt ... nicht gefunden</td><td>Der Anfangs- oder Endpunkt steht weder in der Festpunkt- noch in der
+Höhendatei. Höhe im Höhenverzeichnis eintragen oder Punktnummer in der Stapeldatei korrigieren.</td></tr>
+<tr><td>Linie unterbrochen</td><td>Der Rückblickpunkt einer Aufstellung ist nicht der Vorblickpunkt der vorherigen.
+Meist ist eine Punktnummer falsch oder ein Vorblick fehlt.</td></tr>
+<tr><td>Aufstellung ... ohne Vorblick verworfen</td><td>Auf einen Rückblick folgt kein Vorblick, z.&nbsp;B. weil die
+Messung abgebrochen wurde. Die Aufstellung wird nicht gerechnet.</td></tr>
+<tr><td>Vorblick ohne vorherigen Rückblick</td><td>Reihenfolge der Messdaten prüfen.</td></tr>
+<tr><td>*** hinter d</td><td>Differenz zweier Ablesungen oder Standpunktdifferenz über der erlaubten Differenz.</td></tr>
+<tr><td>Zielweiten unvollständig</td><td>Mindestens eine Strecke fehlt; es wird nach Anzahl der Blicke verteilt und
+die Fehlergrenze kann nicht berechnet werden.</td></tr>
+<tr><td>... wird in dieser Version noch nicht berechnet</td><td>Streckennivellement, Linienausgleichung und
+Instrumentenprüfung folgen in einer späteren Version.</td></tr>
+<tr><td>Steuerdatenblock hat ... K-Zeilen</td><td>Es fehlen Kopf- oder Parameterzeilen; fehlende Werte werden mit
+Standardwerten belegt.</td></tr>
+<tr><td>Höhen dieser Berechnung wurden NICHT gespeichert</td><td>Die Option &bdquo;Höhen nicht speichern, wenn
+Fehlergrenze überschritten&ldquo; ist eingeschaltet und hat gegriffen.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2><a name="fragen"></a>19. Häufige Fragen</h2>
+<p><b>Warum ändern sich die Höhen bei jeder Neuberechnung leicht?</b><br>
+Mit Mittelbildung &bdquo;mitteln&ldquo; wird jede Berechnung mit den bereits gespeicherten Höhen gemittelt. Vor einer
+vollständigen Neuberechnung &bdquo;Neupunkte vorher löschen&ldquo; ankreuzen.</p>
+<p><b>Ich habe Werte in der Stapeldatei geändert, die Berechnung zeigt aber das Alte.</b><br>
+Der Editor speichert vor jeder Prüfung und Berechnung automatisch. Wurde die Datei außerhalb des Programms
+geändert, im Register Stapeldatei auf <b>Neu laden</b> klicken.</p>
+<p><b>Kann ich die Höhendatei in Excel bearbeiten?</b><br>
+Ja, sie ist eine Semikolon-getrennte CSV-Datei. Das Programm sollte dabei nicht gleichzeitig dieselbe Datei
+geändert haben.</p>
+<p><b>Wie kann ich ein einzelnes Nivellement neu rechnen?</b><br>
+Berechnungs-Nr. von und bis auf diese Nummer setzen und &bdquo;Alte Berechnung löschen&ldquo; ausschalten, wenn das
+bisherige Protokoll erhalten bleiben soll.</p>
+<p><b>Windows meldet beim ersten Start &bdquo;Der Computer wurde durch Windows geschützt&ldquo;.</b><br>
+Das Programm ist nicht digital signiert. Auf &bdquo;Weitere Informationen&ldquo; und dann &bdquo;Trotzdem ausführen&ldquo; klicken.</p>
+<p><b>Wo finde ich den Quelltext?</b><br>
+Das Programm ist Open Source (MIT-Lizenz) und auf GitHub veröffentlicht.</p>
+
+<!-- ============================================================ -->
+<h2><a name="grenzen"></a>20. Was noch nicht enthalten ist</h2>
+<ul>
+<li>Streckennivellement, Linienausgleichung und Instrumentenprüfung (werden erkannt, aber noch nicht berechnet)</li>
+<li>Lattenkorrektur (Lattenmeter, Temperatur)</li>
+<li>Rückschreiben der Höhen in das Geräteformat (Absteckung)</li>
+<li>Setzungslisten, Setzungsdiagramme und Profile</li>
+<li>Maßeinheiten Fuß und Zoll</li>
+</ul>
+<p><a href="#start">&uarr; zum Anfang</a></p>
+</body>
+</html>
