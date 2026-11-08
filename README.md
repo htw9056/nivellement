@@ -18,7 +18,7 @@ Alle Versionen und Änderungen stehen unter **[Releases](https://github.com/htw9
 
 ![Protokoll einer Stapelberechnung](docs/3_Protokoll.png)
 
-**[Handbuch](docs/Handbuch.html)**: ausführliche Anleitung mit Rechenweg und Formeln. Es ist auch im Programm unter *? → Handbuch* bzw. mit **F1** aufrufbar.
+**[Webseite](https://htw9056.github.io/nivellement/)** · **[Handbuch](https://htw9056.github.io/nivellement/Handbuch.html)**: ausführliche Anleitung mit Rechenweg und Formeln. Es ist auch im Programm unter *? → Handbuch* bzw. mit **F1** aufrufbar.
 
 Weitere Ansichten: [Berechnung](docs/1_Berechnung.png) · [Stapeldatei](docs/2_Stapeldatei.png) · [Höhenverzeichnis](docs/4_Hoehenverzeichnis.png) · [Kopfdaten](docs/5_Kopfdaten.png) · [Programmkonfiguration](docs/6_Programmkonfiguration.png) · [Handbuch-Fenster](docs/7_Handbuch.png) · [Ausdruck](docs/8_Druck.png)
 

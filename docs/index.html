@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nivellement – klassische Nivellementauswertung</title>
+<meta name="description" content="Freies Programm zur klassischen Nivellementauswertung mit Verteilung des Abschlussfehlers. Liest Leica GSI, Trimble DAT und NIGRA-Projekte. Für Windows, ohne Java-Installation.">
+<link rel="icon" type="image/png" href="symbol.png">
+<style>
+:root {
+  --blau: #16487f;
+  --blau-dunkel: #0e3158;
+  --blau-hell: #e8eff7;
+  --rot: #d42b2b;
+  --text: #1d2733;
+  --grau: #5b6775;
+  --linie: #d8dee6;
+  --hinter: #f6f8fa;
+  --weiss: #ffffff;
+  --gruen: #2e7d4f;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+  background: var(--weiss);
+  line-height: 1.6;
+  font-size: 17px;
+}
+a { color: var(--blau); }
+img { max-width: 100%; height: auto; display: block; }
+.breite { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+/* Kopfleiste */
+.leiste {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--linie);
+}
+.leiste .breite { display: flex; align-items: center; gap: 24px; height: 60px; }
+.marke { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 19px; color: var(--blau-dunkel); text-decoration: none; }
+.marke img { width: 32px; height: 32px; border-radius: 6px; }
+.leiste nav { margin-left: auto; display: flex; gap: 22px; }
+.leiste nav a { color: var(--text); text-decoration: none; font-size: 15px; }
+.leiste nav a:hover { color: var(--blau); }
+
+/* Kopfbereich */
+.held {
+  background:
+    linear-gradient(180deg, rgba(14,49,88,.0) 60%, rgba(14,49,88,.06) 100%),
+    linear-gradient(135deg, #0e3158 0%, #16487f 55%, #1f5d9e 100%);
+  color: #fff;
+  padding: 72px 0 0;
+  overflow: hidden;
+}
+.held .breite { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+.held h1 { font-size: 46px; line-height: 1.12; margin: 0 0 18px; letter-spacing: -.5px; }
+.held h1 span { color: #ffd34d; }
+.held p.lead { font-size: 19px; color: #dfe9f5; margin: 0 0 28px; max-width: 34em; }
+.knoepfe { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.knopf {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 17px;
+  text-decoration: none; transition: transform .1s, box-shadow .1s;
+}
+.knopf:hover { transform: translateY(-1px); }
+.knopf.haupt { background: #ffd34d; color: #1d2733; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.knopf.neben { color: #fff; border: 1px solid rgba(255,255,255,.5); }
+.knopf.neben:hover { background: rgba(255,255,255,.08); }
+.knopf svg { width: 20px; height: 20px; }
+.klein { font-size: 14px; color: #b9cbe0; margin-top: 14px; }
+.held .bild {
+  align-self: end;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -2px 40px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.25);
+  border-bottom: none;
+  background: #fff;
+}
+.latte { display: flex; height: 8px; }
+.latte i { flex: 1; }
+.latte i:nth-child(odd) { background: var(--rot); }
+.latte i:nth-child(even) { background: #fff; }
+
+/* Abschnitte */
+section { padding: 72px 0; }
+section.grau { background: var(--hinter); border-top: 1px solid var(--linie); border-bottom: 1px solid var(--linie); }
+h2 { font-size: 32px; margin: 0 0 10px; color: var(--blau-dunkel); letter-spacing: -.3px; }
+.unter { color: var(--grau); margin: 0 0 40px; max-width: 46em; }
+
+/* Funktionen */
+.raster { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.karte {
+  background: #fff; border: 1px solid var(--linie); border-radius: 10px; padding: 24px;
+}
+.karte h3 { margin: 0 0 8px; font-size: 18px; color: var(--blau-dunkel); display: flex; align-items: center; gap: 10px; }
+.karte h3 .icon {
+  flex: none; width: 34px; height: 34px; border-radius: 8px; background: var(--blau-hell);
+  display: grid; place-items: center; color: var(--blau);
+}
+.karte h3 .icon svg { width: 19px; height: 19px; }
+.karte p { margin: 0; color: var(--grau); font-size: 15.5px; }
+
+/* Ansichten */
+.ansichten { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: start; }
+.reiter { display: flex; flex-direction: column; gap: 6px; }
+.reiter button {
+  text-align: left; padding: 12px 14px; border: 1px solid var(--linie); background: #fff;
+  border-radius: 8px; font: inherit; font-size: 15.5px; cursor: pointer; color: var(--text);
+}
+.reiter button[aria-selected="true"] { border-color: var(--blau); background: var(--blau-hell); color: var(--blau-dunkel); font-weight: 600; }
+.reiter button small { display: block; color: var(--grau); font-weight: 400; font-size: 13.5px; }
+.schirm { border: 1px solid var(--linie); border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 6px 24px rgba(16,40,70,.08); }
+.schirm img { width: 100%; }
+
+/* Rechenweg */
+.zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.formel {
+  font-family: Consolas, "Courier New", monospace; background: var(--blau-hell);
+  border-left: 4px solid var(--blau); padding: 12px 16px; border-radius: 0 6px 6px 0;
+  margin: 10px 0 18px; font-size: 16px; overflow-x: auto;
+}
+.haken { list-style: none; padding: 0; margin: 0; }
+.haken li { padding: 6px 0 6px 30px; position: relative; }
+.haken li::before {
+  content: ""; position: absolute; left: 0; top: 12px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--gruen) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3E%3Cpath d='M8 13.6 4.4 10l-1.4 1.4L8 16.4l9-9-1.4-1.4z'/%3E%3C/svg%3E") center/14px no-repeat;
+}
+table.vergleich { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--linie); border-radius: 8px; overflow: hidden; font-size: 15.5px; }
+table.vergleich th, table.vergleich td { padding: 10px 14px; border-bottom: 1px solid var(--linie); text-align: left; }
+table.vergleich th { background: var(--blau-hell); color: var(--blau-dunkel); }
+table.vergleich tr:last-child td { border-bottom: none; }
+.ok { color: var(--gruen); font-weight: 600; }
+
+/* Schritte */
+.schritte { counter-reset: s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.schritt { position: relative; padding: 22px 20px 20px; background: #fff; border: 1px solid var(--linie); border-radius: 10px; }
+.schritt::before {
+  counter-increment: s; content: counter(s);
+  position: absolute; top: -16px; left: 20px; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--blau); color: #fff; display: grid; place-items: center; font-weight: 700;
+}
+.schritt h3 { margin: 6px 0 6px; font-size: 17px; }
+.schritt p { margin: 0; color: var(--grau); font-size: 15px; }
+
+/* Download-Kasten */
+.download {
+  display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center;
+  background: linear-gradient(135deg, #0e3158, #16487f); color: #fff; border-radius: 14px; padding: 36px 40px;
+}
+.download h2 { color: #fff; }
+.download p { color: #dfe9f5; margin: 0; }
+.hinweis { background: #fff8e1; border: 1px solid #f1d98a; border-radius: 8px; padding: 14px 18px; font-size: 15px; margin-top: 26px; color: #5c4a10; }
+
+footer { padding: 36px 0 48px; color: var(--grau); font-size: 14.5px; border-top: 1px solid var(--linie); }
+footer .breite { display: grid; gap: 10px; }
+code { font-family: Consolas, "Courier New", monospace; background: var(--hinter); padding: 1px 6px; border-radius: 4px; font-size: .92em; border: 1px solid var(--linie); }
+
+@media (max-width: 900px) {
+  .held .breite, .zwei, .ansichten, .download { grid-template-columns: 1fr; }
+  .held h1 { font-size: 36px; }
+  .raster { grid-template-columns: 1fr 1fr; }
+  .schritte { grid-template-columns: 1fr 1fr; row-gap: 32px; }
+  .reiter { flex-direction: row; overflow-x: auto; }
+  .reiter button { flex: none; }
+  .reiter button small { display: none; }
+  .leiste nav { display: none; }
+}
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .raster, .schritte { grid-template-columns: 1fr; }
+  section { padding: 52px 0; }
+  .download { padding: 28px 22px; }
+}
+</style>
+</head>
+<body>
+
+<header class="leiste">
+  <div class="breite">
+    <a class="marke" href="#"><img src="symbol.png" alt="">Nivellement</a>
+    <nav>
+      <a href="#funktionen">Funktionen</a>
+      <a href="#ansichten">Ansichten</a>
+      <a href="#rechenweg">Rechenweg</a>
+      <a href="#nigra">NIGRA</a>
+      <a href="Handbuch.html">Handbuch</a>
+      <a href="https://github.com/htw9056/nivellement">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="held">
+  <div class="breite">
+    <div>
+      <h1>Nivellements klassisch auswerten – <span>frei und kostenlos</span></h1>
+      <p class="lead">Abschlussfehler ermitteln, gegen die Fehlergrenze prüfen und auf die Aufstellungen verteilen.
+      Direkt aus Leica- und Trimble-Digitalnivellieren, mit Höhenverzeichnis, Mittelbildung und Protokoll &ndash;
+      und kompatibel zu vorhandenen NIGRA-Projekten.</p>
+      <div class="knoepfe">
+        <a class="knopf haupt" href="https://github.com/htw9056/nivellement/releases/download/V1.00/Nivellement_V1.00_Windows.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Download für Windows
+        </a>
+        <a class="knopf neben" href="Handbuch.html">Handbuch lesen</a>
+      </div>
+      <p class="klein">Version 1.00 &middot; ZIP, 36&nbsp;MB &middot; keine Installation, kein Java nötig &middot; MIT-Lizenz</p>
+    </div>
+    <div class="bild"><img src="3_Protokoll.png" alt="Programmfenster mit Berechnungsprotokoll" width="1180" height="760"></div>
+  </div>
+  <div class="latte" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<section id="funktionen">
+  <div class="breite">
+    <h2>Funktionen</h2>
+    <p class="unter">Alles, was für die tägliche Auswertung von Höhennivellements gebraucht wird &ndash; vom Einlesen der Rohdaten bis zum gedruckten Protokoll.</p>
+    <div class="raster">
+      <div class="karte">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12H4z"/><path d="M8 20h8M12 16v4"/></svg></span>Digitalnivelliere</h3>
+        <p>Leica GSI (GSI-8/16, z.&nbsp;B. DNA03, LS10/LS15, Sprinter) und Trimble DAT (DiNi) &ndash; mit deutschen und englischen Kennungen, mehrere Dateien auf einmal.</p>
+      </div>
+      <div class="karte">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg></span>Linien und Schleifen</h3>
+        <p>Angehängte Linien und Schleifen, Zwischenblicke, Doppelablesungen (RRVV, RVVR) mit Differenzkontrolle, ½-cm-Latte und Lattenkonstante.</p>
+      </div>
+      <div class="karte">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></span>Fehlerverteilung</h3>
+        <p>Streckenproportional nach Zielweiten oder gleichmäßig je Aufstellung. Vier Fehlerklassen mit frei definierbarer Formel, z.&nbsp;B. <code>2 + 3*Sqrt(R)</code>.</p>
+      </div>
+      <div class="karte">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span>Höhenverzeichnis</h3>
+        <p>Projekt-Höhendatei mit Festpunkten, Mittelbildung (mitteln, neu, vergleichen, ohne), Mittelbildungsprotokoll, Umnummerieren, Import und Export.</p>
+      </div>
+      <div class="karte">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></span>Protokoll und Druck</h3>
+        <p>Feldbuchprotokoll mit Abschlussfehler, Fehlergrenze und ***-Kennzeichnung. Druck und PDF mit Firmenkopf und eigenem Logo.</p>
+      </div>
+      <div class="karte">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>Stapelverarbeitung</h3>
+        <p>Beliebig viele Linien in einer Stapeldatei, Berechnung aller oder einzelner Nummern, Editor mit Spaltenlineal, Prüfung der Messdaten.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ansichten" class="grau">
+  <div class="breite">
+    <h2>So sieht es aus</h2>
+    <p class="unter">Eine übersichtliche Oberfläche mit Registern. Alle Einstellungen werden automatisch gespeichert und in neue Projekte übernommen.</p>
+    <div class="ansichten">
+      <div class="reiter" role="tablist">
+        <button role="tab" aria-selected="true" data-bild="1_Berechnung.png">Berechnung<small>Parameter und Stapelberechnung</small></button>
+        <button role="tab" aria-selected="false" data-bild="3_Protokoll.png">Protokoll<small>Ergebnis der Berechnung</small></button>
+        <button role="tab" aria-selected="false" data-bild="2_Stapeldatei.png">Stapeldatei<small>Messdaten bearbeiten</small></button>
+        <button role="tab" aria-selected="false" data-bild="4_Hoehenverzeichnis.png">Höhenverzeichnis<small>Festpunkte und Neupunkte</small></button>
+        <button role="tab" aria-selected="false" data-bild="6_Programmkonfiguration.png">Konfiguration<small>Fehlerklassen und Logo</small></button>
+        <button role="tab" aria-selected="false" data-bild="8_Druck.png">Ausdruck<small>DIN A4 mit eigenem Logo</small></button>
+        <button role="tab" aria-selected="false" data-bild="7_Handbuch.png">Handbuch<small>F1 im Programm</small></button>
+      </div>
+      <div class="schirm"><img id="ansicht" src="1_Berechnung.png" alt="Register Berechnung"></div>
+    </div>
+  </div>
+</section>
+
+<section id="rechenweg">
+  <div class="breite zwei">
+    <div>
+      <h2>Rechenweg</h2>
+      <p class="unter" style="margin-bottom:20px">Klassische Auswertung ohne Ausgleichung &ndash; nachvollziehbar und im Handbuch vollständig beschrieben.</p>
+      <strong>Abschlussfehler (Soll &minus; Ist)</strong>
+      <div class="formel">w = (H<sub>E</sub> &minus; H<sub>A</sub>) &minus; &Sigma;(R<sub>i</sub> &minus; V<sub>i</sub>)</div>
+      <strong>Streckenproportionale Verteilung</strong>
+      <div class="formel">v<sub>i</sub> = w &middot; (s<sub>R,i</sub> + s<sub>V,i</sub>) / &Sigma;s</div>
+      <strong>Zwischenpunkte</strong>
+      <div class="formel">H<sub>Z</sub> = H<sub>R</sub> + (R &minus; Z) + v<sub>i</sub> &middot; s<sub>R</sub> / (s<sub>R</sub> + s<sub>V</sub>)</div>
+      <p style="color:var(--grau);font-size:15px">Ausgaben werden geodätisch gerundet (Mitte zur geraden Ziffer). <a href="Handbuch.html#rechenweg">Alle Formeln im Handbuch</a></p>
+    </div>
+    <div>
+      <h2 id="nigra">NIGRA-kompatibel</h2>
+      <p class="unter" style="margin-bottom:20px">Der Vertrieb von NIGRA wurde Ende 2023 eingestellt. Vorhandene Projekte lassen sich mit Nivellement direkt weiterführen.</p>
+      <ul class="haken">
+        <li>Stapeldateien <code>.NIG</code> öffnen, bearbeiten und berechnen</li>
+        <li>Höhendateien <code>.MDB</code> übernehmen &ndash; ohne Microsoft Access</li>
+        <li>Einstellungen aus <code>Projekt.xml</code> und Höhenverzeichnisse <code>.ASC</code></li>
+        <li>Gleiche Rechenweise, Mittelbildung und Rundung</li>
+      </ul>
+      <p style="margin:26px 0 10px;font-weight:600">Abgleich mit realen NIGRA-6.2-Projekten:</p>
+      <table class="vergleich">
+        <tr><th>Prüfung</th><th>Ergebnis</th></tr>
+        <tr><td>24 Nivellements, über 500 Punkthöhen</td><td class="ok">identisch</td></tr>
+        <tr><td>Abschlussfehler und Fehlergrenzen</td><td class="ok">identisch</td></tr>
+        <tr><td>Höhendatei mit Mittelbildung</td><td class="ok">identisch</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="grau">
+  <div class="breite">
+    <h2>In vier Schritten zum Protokoll</h2>
+    <p class="unter">Ein Projekt ist ein Ordner mit einer Stapeldatei. Höhendatei, Protokoll und Einstellungen legt das Programm daneben an.</p>
+    <div class="schritte">
+      <div class="schritt"><h3>Projekt anlegen</h3><p><em>Datei &rarr; Neues Projekt</em> oder eine vorhandene NIGRA-Stapeldatei öffnen.</p></div>
+      <div class="schritt"><h3>Rohdaten übernehmen</h3><p>GSI- oder DAT-Dateien wählen &ndash; jede Linie erhält Kopfdaten und eine Berechnungsnummer.</p></div>
+      <div class="schritt"><h3>Festpunkte eingeben</h3><p>Im Höhenverzeichnis eintragen oder als ASCII bzw. NIGRA-MDB importieren.</p></div>
+      <div class="schritt"><h3>Berechnen und drucken</h3><p>Stapelberechnung starten, Protokoll prüfen, mit eigenem Logo drucken oder als PDF speichern.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="breite">
+    <div class="download">
+      <div>
+        <h2>Nivellement V1.00 herunterladen</h2>
+        <p>ZIP herunterladen, entpacken, <strong>Nivellement.exe</strong> starten. Die Java-Laufzeit ist enthalten.<br>
+        Für andere Systeme: <code style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff">java -jar app/Nivellement.jar</code> mit Java 17 oder neuer.</p>
+      </div>
+      <a class="knopf haupt" href="https://github.com/htw9056/nivellement/releases/download/V1.00/Nivellement_V1.00_Windows.zip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Download (36&nbsp;MB)
+      </a>
+    </div>
+    <div class="hinweis">
+      <strong>Hinweis zum ersten Start:</strong> Windows meldet möglicherweise &bdquo;Der Computer wurde durch Windows geschützt&ldquo;,
+      weil das Programm nicht digital signiert ist. Dann auf &bdquo;Weitere Informationen&ldquo; und &bdquo;Trotzdem ausführen&ldquo; klicken.
+      Alle Versionen finden Sie unter <a href="https://github.com/htw9056/nivellement/releases">Releases</a>.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="breite">
+    <div><strong>Nivellement</strong> &copy; Dipl.-Ing. (FH) Stefan Klein &middot; freie Software unter der
+      <a href="https://github.com/htw9056/nivellement/blob/main/LICENSE">MIT-Lizenz</a> &middot;
+      <a href="https://github.com/htw9056/nivellement">Quelltext auf GitHub</a> &middot;
+      Fragen und Fehlermeldungen über <a href="https://github.com/htw9056/nivellement/issues">GitHub Issues</a></div>
+    <div>Nivellement ist ein eigenständiges, unabhängig entwickeltes Programm und enthält keinen Programmcode und keine Texte von NIGRA.
+      NIGRA ist ein Produkt von Kurt Andrä; der Name wird nur verwendet, um die Kompatibilität der Dateiformate zu beschreiben.
+      Es besteht keine Verbindung zu Kurt Andrä.</div>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.reiter button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.reiter button').forEach(function (x) { x.setAttribute('aria-selected', 'false'); });
+    b.setAttribute('aria-selected', 'true');
+    var img = document.getElementById('ansicht');
+    img.src = b.getAttribute('data-bild');
+    img.alt = 'Ansicht ' + b.firstChild.textContent;
+  });
+});
+</script>
+</body>
+</html>
