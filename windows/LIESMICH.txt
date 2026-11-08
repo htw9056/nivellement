@@ -36,6 +36,12 @@ Handbuch.html             ausfuehrliche Anleitung (auch im Programm: F1)
 DRITTANBIETER.txt         Lizenzen der mitgelieferten Java- und Go-Laufzeit
 
 
+KONTAKT
+-------
+Fragen, Fehlermeldungen und Wuensche ausschliesslich ueber das Forum:
+    https://github.com/htw9056/nivellement/discussions
+
+
 ERSTE SCHRITTE
 --------------
 1. Datei -> Neues Projekt  (oder vorhandene NIGRA-Stapeldatei .NIG oeffnen;

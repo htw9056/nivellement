@@ -280,6 +280,12 @@ Die Rechenweise wurde gegen NIGRA 6.2 geprüft:
     - mit einer per `jlink` verkleinerten Java-Laufzeit (ca. 50 MB)
     - benötigt Go und Python 3
 
+## Kontakt
+
+Fragen, Fehlermeldungen und Wünsche bitte ausschließlich über das **[Forum (GitHub Discussions)](https://github.com/htw9056/nivellement/discussions)**. Zum Schreiben ist ein kostenloses GitHub-Konto nötig.
+
+Bei Fehlern hilft es sehr, die Messdatei (GSI, DAT oder NIG) und das Protokoll anzuhängen. Bitte vorher prüfen, ob die Daten weitergegeben werden dürfen.
+
 ## Lizenz
 
 MIT-Lizenz, siehe [LICENSE](LICENSE).
