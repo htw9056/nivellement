@@ -4,6 +4,18 @@
 
 Klassische Auswertung geometrischer Nivellements **ohne Ausgleichung**: Der Abschlussfehler einer Nivellementlinie wird ermittelt, gegen eine Fehlergrenze geprüft und auf die Aufstellungen verteilt. Die Höhen werden in einer Projekt-Höhendatei mit Mittelbildung fortgeführt.
 
+## ⬇ Download
+
+**[Nivellement V1.00 für Windows herunterladen (ZIP, 36 MB)](https://github.com/htw9056/nivellement/releases/download/V1.00/Nivellement_V1.00_Windows.zip)**
+
+So geht es los:
+
+1. ZIP-Datei herunterladen und entpacken.
+2. `Nivellement.exe` starten. Eine Java-Installation ist nicht nötig.
+3. Meldet Windows beim ersten Start „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken. Das Programm ist nicht digital signiert.
+
+Alle Versionen und Änderungen stehen unter **[Releases](https://github.com/htw9056/nivellement/releases)**. Auf anderen Systemen startet man `app/Nivellement.jar` aus dem ZIP mit Java 17 oder neuer (`java -jar Nivellement.jar`).
+
 ![Protokoll einer Stapelberechnung](docs/3_Protokoll.png)
 
 **[Handbuch](docs/Handbuch.html)**: ausführliche Anleitung mit Rechenweg und Formeln. Es ist auch im Programm unter *? → Handbuch* bzw. mit **F1** aufrufbar.
